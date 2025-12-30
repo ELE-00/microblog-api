@@ -3,7 +3,13 @@
 function getAllUsers(prisma){
   return async (req, res) => {
     try{
-    const users = await prisma.user.findMany();
+    const users = await prisma.user.findMany({
+        select: {
+        id: true,
+        username: true,
+        profile: true,
+        }
+    });
 
     res.json(users)
 
@@ -25,13 +31,36 @@ function getUserData(prisma){
     try{
     //get profile
     const user = await prisma.user.findUnique({
-      where: {id: userId},
-      include: {
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        createdAt: true,
         profile: true,
         posts: {
-          orderBy: {createdAt: "desc"},
-        },
-      },
+          orderBy: { createdAt: "desc" },
+          include: {
+            author: {
+              select: {
+                id: true,
+                username: true,
+                profile: {
+                  select: {
+                    name: true,
+                    profilePic: true
+                  }
+                }
+              }
+            },
+            _count: {
+              select: {
+                likes: true,
+                comments: true
+              }
+            }
+          }
+        }
+      }
     });
 
     res.json(user);

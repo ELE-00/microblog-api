@@ -9,7 +9,7 @@ function authenticateToken(req, res, next) {
     
     // DEV MODE BYPASS
     if (process.env.NODE_ENV === "development" && token === "dev-token") {
-        req.user = { id: 1, username: "ele" };
+        req.user = { id: 17, username: "ele" };
         return next();
     }
 

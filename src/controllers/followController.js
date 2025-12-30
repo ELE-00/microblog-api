@@ -6,6 +6,9 @@ function followUser(prisma) {
         const userId = req.user.id
         const followingId = parseInt(req.params.id)
 
+        console.log("follow userId", userId )
+        console.log("follow followingId", userId )
+
         try{
             const follow = await prisma.follow.upsert({
                 where: {followerId_followingId: {followerId: userId, followingId}},
@@ -29,11 +32,11 @@ function unfollowUser(prisma) {
         const followingId = parseInt(req.params.id)
 
         try{
-            const removeFollow = await prisma.follow.delete({
+            await prisma.follow.delete({
                 where: {followerId_followingId: {followerId: userId, followingId}},
             })
 
-            res.json(removeFollow)
+            res.json({ success: true })
 
         } catch(err) {
             console.log(err)
@@ -41,6 +44,34 @@ function unfollowUser(prisma) {
         }
     }
 }
+
+
+//Remove follower
+function removeFollower(prisma) {    
+    return async (req, res) => {
+        const userId = req.user.id
+        const followerId = parseInt(req.params.id)
+
+        console.log("user: ", userId)
+        console.log("followerId: ", followerId)
+
+        try{
+            await prisma.follow.delete({
+                where: {followerId_followingId: {followerId, followingId: userId}},
+            })
+
+            res.json({ success: true })
+
+        } catch(err) {
+            console.log(err)
+            res.status(400).json({error: "failed to remove follower"})
+        }
+    }
+}
+
+
+
+
 
 //Get followers users
 function getfollowers(prisma) {
@@ -88,7 +119,9 @@ function getfollowing(prisma) {
                         id: true,
                         username: true,
                         profile: {
-                            select: {profilePic: true}
+                            select: {
+                                name: true, 
+                                profilePic: true}
                         }
                     }
                 }
@@ -103,4 +136,4 @@ function getfollowing(prisma) {
     }
 }
 
-module.exports = {followUser, unfollowUser, getfollowers, getfollowing}
+module.exports = {followUser, unfollowUser, getfollowers, getfollowing, removeFollower}
