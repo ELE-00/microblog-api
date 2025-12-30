@@ -13,12 +13,11 @@ function uploadProfileImage(prisma) {
         // Upload to Cloudinary
         const uploadResult = await cloudinary.uploader.upload(req.file.path, {
             folder: "profile_pics",
-            resource_type: "image"
         });
 
         // Save to Prisma
         const updatedUser = await prisma.profile.update({
-            where: {id: userId},
+            where: {userId},
             data: {
                 profilePic: uploadResult.secure_url,
             }
@@ -26,17 +25,51 @@ function uploadProfileImage(prisma) {
 
         return res.json({
             success: true,
-            profilepic: uploadResult.secure_url,
+            profilePic: uploadResult.secure_url,
             user: updatedUser
         });
 
         } catch (err) {
             console.error(err);
-            console.log("Upload failed");
+            return res.status(500).json({ error: "Upload failed" });
         }
     }
 }
 
+function uploadBannerImage(prisma) {
+    return async (req, res) => {
+    const userId = req.user.id;
+
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    try {
+        // Upload to Cloudinary
+        const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+            folder: "banner_pics",
+        });
+
+        // Save to Prisma
+        const updatedUser = await prisma.profile.update({
+            where: {userId},
+            data: {
+                bannerPic: uploadResult.secure_url,
+            }
+        });
+
+        return res.json({
+            success: true,
+            bannerPic: uploadResult.secure_url,
+            user: updatedUser
+        });
+
+        } catch (err) {
+            console.error(err);
+            return res.status(500).json({ error: "Upload failed" });
+        }
+    }
+}
 
 
 
@@ -74,10 +107,12 @@ function UpdateProfileData(prisma) {
     const userId = req.user.id;
     const {name, dateOfBirth, occupation, bio, location} = req.body;
 
+    const formattedDate = dateOfBirth ? new Date(dateOfBirth).toISOString() : null;
+
     try {
         const updateProfile = await prisma.profile.update({
             where: {userId: userId},
-            data: {name: name, dateOfBirth: dateOfBirth, occupation: occupation, location: location, bio: bio}
+            data: {name: name, dateOfBirth: formattedDate, occupation: occupation, location: location, bio: bio}
         })
 
         res.json(updateProfile);
@@ -89,4 +124,4 @@ function UpdateProfileData(prisma) {
     }
 }
 
-module.exports = { uploadProfileImage, getProfileData, UpdateProfileData };
+module.exports = { uploadProfileImage, uploadBannerImage, getProfileData, UpdateProfileData };

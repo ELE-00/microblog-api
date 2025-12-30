@@ -8,27 +8,101 @@ function createPost(prisma) {
         const { content } = req.body;
 
         try {
-            const newPost = await prisma.post.create(
-                {data: {content: content, authorId: authorId}}
-            )
+            let imageUrl = null;
 
-            res.json(newPost)
+            // 🖼️ Upload image if provided
+            if (req.file) {
+                const uploadResult = await cloudinary.uploader.upload(
+                    req.file.path,
+                    {
+                        folder: "post_images",
+                    }
+                );
+                imageUrl = uploadResult.secure_url;
+            }
 
+            const newPost = await prisma.post.create({
+                data: {
+                    content,
+                    authorId,
+                    image: imageUrl,
+                },
+                include: {
+                    author: {
+                        select: {
+                            id: true,
+                            username: true,
+                            profile: {
+                                select: {
+                                    name: true,
+                                    profilePic: true,
+                                },
+                            },
+                        },
+                    },
+                    _count: {
+                        select: {
+                            likes: true,
+                            comments: true,
+                        },
+                    },
+                },
+            });
+
+            res.json(newPost);
         } catch (err) {
-            console.log(err)
-            res.status(400).json({err: "Failed to create post"})
+            console.error(err);
+            res.status(400).json({ err: "Failed to create post" });
         }
-    }
+    };
 }
 
+
+const getPublicIdFromUrl = (url) => {
+    const parts = url.split("/");
+    const filename = parts[parts.length - 1];
+    return `post_images/${filename.split(".")[0]}`;
+};
+
+
+function deletePostById(prisma) {
+    return async (req, res) => {
+        const postId = parseInt(req.params.id);
+        const userId = req.user.id;
+
+        try {
+            const post = await prisma.post.findUnique({
+                where: { id: postId },
+            });
+
+            if (!post || post.authorId !== userId) {
+                return res.status(403).json({ err: "Not allowed" });
+            }
+
+            // 🗑️ Delete Cloudinary image if exists
+            if (post.image) {
+                const publicId = getPublicIdFromUrl(post.image);
+                await cloudinary.uploader.destroy(publicId);
+            }
+
+            await prisma.post.delete({
+                where: { id: postId },
+            });
+
+            res.json({ success: true });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ err: "Failed to delete post" });
+        }
+    };
+}
 
 function getPosts(prisma) {
     return async (req, res) => {
 
         //get user iD
         const userId = req.user.id;
-
-        
+    
         try{
 
             //Get following IDs
@@ -82,6 +156,7 @@ function getPosts(prisma) {
 function getPostById(prisma) {
     return async (req, res) => {
         const postId = parseInt(req.params.id);
+        console.log("getPostById hit with id:", req.params.id);
 
         try{ 
             const post = await prisma.post.findUnique({
@@ -100,10 +175,10 @@ function getPostById(prisma) {
                         }        
                     },
                     comments: {
+                        orderBy: {createdAt: "desc"},
                         select: {
                             userId: true,
                             content: true,
-                            orderBy: {createdAt: "desc"}
                         }
                     },
                     _count: {
@@ -127,29 +202,27 @@ function getPostById(prisma) {
 }
 
 
-function deletePostById(prisma) {
+
+
+
+function postLiked(prisma) {
     return async (req, res) => {
         const postId = parseInt(req.params.id);
-        const userId = req.user.id
+        const userId = req.user.id;
 
-        try {
-            const post = await prisma.post.findUnique({where: {id: postId}})
+        try{
+            const postLikes = await prisma.like.findUnique({where: {userId_postId: { userId, postId }}})  
 
-            //Check if user is the post author
-            if(!post || post.authorId !== userId){
-                return res.status(403).json({err: "Not allowed"})
-            }
+            res.json(postLikes)
 
-            await prisma.post.delete({ where: {id: postId}})
-
-            res.json({success: true});
-
-        } catch (err) {
+        }catch (err) {
             console.log(err)
-            res.status(500).json({err: "Failed to delete post"})
+            res.status(500).json({err: "Failed to get post likes"})
         }
     }
 }
+
+
 
 
 function likePost(prisma) {
@@ -200,9 +273,24 @@ function createComment(prisma) {
         const userId = req.user.id;
         const { content } = req.body;
 
+        console.log("Received content: ", content)
+
         try {
             const newComment = await prisma.comment.create({
-                data: {userId: userId, postId: postId, content: content}
+                data: {userId: userId, postId: postId, content: content},
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            username: true,
+                            profile: {
+                                select: {
+                                    name: true,
+                                    profilePic: true}
+                            }
+                        }
+                    }
+                }
             })
 
             res.json(newComment);
@@ -275,4 +363,6 @@ function deleteComment(prisma) {
     }
 }
 
-module.exports = { createPost, getPosts, getPostById, deletePostById, likePost, unlikePost, createComment, getComments, deleteComment};
+
+
+module.exports = { createPost, getPosts, getPostById, deletePostById, likePost, postLiked, unlikePost, createComment, getComments, deleteComment};
