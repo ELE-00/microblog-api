@@ -49,7 +49,8 @@ app.use("/api/user", authenticationToken, userRouter);
 
 
 if (require.main === module) {
-    app.listen(3000, () => console.log("API at localhost 3000"));
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => console.log(`API running on port ${PORT}`));
 }
 
 module.exports = app;
