@@ -25,7 +25,7 @@ const authenticationToken = require("./middleware/authenticateToken.js");
 const app = express();
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [];
-app.use(cors({
+const corsOptions = {
     origin: (origin, callback) => {
         // Allow requests with no origin (e.g. mobile apps, curl, Postman)
         if (!origin || allowedOrigins.includes(origin)) {
@@ -34,7 +34,9 @@ app.use(cors({
             callback(new Error("Not allowed by CORS"));
         }
     }
-}));
+};
+app.options('*', cors(corsOptions));
+app.use(cors(corsOptions));
 app.use(express.json());
 
  
