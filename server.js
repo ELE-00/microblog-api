@@ -2,7 +2,6 @@
 console.log("SERVER MODE:", process.env.NODE_ENV)
 
 const express = require("express");
-const cors = require("cors");
 const cloudinary = require('cloudinary').v2;
 require("dotenv").config();
 
@@ -26,17 +25,19 @@ const app = express();
 
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(",").map(o => o.trim()).filter(Boolean);
 console.log("Allowed origins:", allowedOrigins);
-const corsOptions = {
-    origin: (origin, callback) => {
-        // Allow requests with no origin (e.g. mobile apps, curl, Postman)
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error("Not allowed by CORS"));
-        }
+
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (!origin || allowedOrigins.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin || '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     }
-};
-app.use(cors(corsOptions));
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(204);
+    }
+    next();
+});
 app.use(express.json());
 
  
