@@ -6,14 +6,6 @@ function authenticateToken(req, res, next) {
 
     if(!token) return res.status(401).json({error: "Missing token"});
 
-    
-    // DEV MODE BYPASS
-    if (process.env.NODE_ENV === "development" && token === "dev-token") {
-        req.user = { id: 17, username: "ele" };
-        return next();
-    }
-
-
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
         if (err) return res.status(403).json({error: "invalid token"});
 

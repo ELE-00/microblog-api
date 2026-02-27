@@ -6,9 +6,6 @@ function followUser(prisma) {
         const userId = req.user.id
         const followingId = parseInt(req.params.id)
 
-        console.log("follow userId", userId )
-        console.log("follow followingId", userId )
-
         try{
             const follow = await prisma.follow.upsert({
                 where: {followerId_followingId: {followerId: userId, followingId}},
@@ -19,14 +16,13 @@ function followUser(prisma) {
             res.json(follow)
 
         } catch(err) {
-            console.log(err)
             res.status(400).json({error: "failed to follow user"})
         }
     }
 }
 
 //Unfollow a users
-function unfollowUser(prisma) {    
+function unfollowUser(prisma) {
     return async (req, res) => {
         const userId = req.user.id
         const followingId = parseInt(req.params.id)
@@ -39,7 +35,6 @@ function unfollowUser(prisma) {
             res.json({ success: true })
 
         } catch(err) {
-            console.log(err)
             res.status(400).json({error: "failed to delete following user"})
         }
     }
@@ -47,13 +42,10 @@ function unfollowUser(prisma) {
 
 
 //Remove follower
-function removeFollower(prisma) {    
+function removeFollower(prisma) {
     return async (req, res) => {
         const userId = req.user.id
         const followerId = parseInt(req.params.id)
-
-        console.log("user: ", userId)
-        console.log("followerId: ", followerId)
 
         try{
             await prisma.follow.delete({
@@ -63,14 +55,10 @@ function removeFollower(prisma) {
             res.json({ success: true })
 
         } catch(err) {
-            console.log(err)
             res.status(400).json({error: "failed to remove follower"})
         }
     }
 }
-
-
-
 
 
 //Get followers users
@@ -93,13 +81,12 @@ function getfollowers(prisma) {
                         }
                     }
                 }
-            } 
+            }
         })
 
         res.json(followers)
 
         } catch(err) {
-            console.log(err)
             res.status(500).json({error: "failed to get followers"})
         }
     }
@@ -120,17 +107,16 @@ function getfollowing(prisma) {
                         username: true,
                         profile: {
                             select: {
-                                name: true, 
+                                name: true,
                                 profilePic: true}
                         }
                     }
                 }
-            } 
+            }
         })
         res.json(following)
 
         } catch(err) {
-            console.log(err)
             res.status(500).json({error: "failed to get followings"})
         }
     }

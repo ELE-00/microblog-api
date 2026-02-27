@@ -15,23 +15,36 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
+    "test": "cross-env NODE_ENV=test jest",
+    "test:coverage": "cross-env NODE_ENV=test jest --coverage",
     "dev": "cross-env NODE_ENV=development nodemon server.js",
     "start": "cross-env NODE_ENV=production node server.js"
   },
   "dependencies": {
     "@prisma/client": "^6.0.0",
     "cloudinary": "^2.8.0",
+    "express-rate-limit": "^8.2.1",
+    "express-validator": "^7.3.1",
     "multer": "^2.0.2",
     "prisma": "^6.0.0",
     "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "cross-env": "^10.1.0",
-    "nodemon": "^3.1.11"
+    "jest": "^30.2.0",
+    "nodemon": "^3.1.11",
+    "supertest": "^7.2.2"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": ["**/__tests__/**/*.test.js"],
+    "collectCoverageFrom": [
+      "src/controllers/**/*.js",
+      "middleware/**/*.js"
+    ],
+    "coverageReporters": ["text", "lcov"]
   }
 }
-

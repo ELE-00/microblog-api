@@ -99,29 +99,26 @@ function deletePostById(prisma) {
 
 function getPosts(prisma) {
     return async (req, res) => {
-
-        //get user iD
         const userId = req.user.id;
-    
-        try{
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
 
-            //Get following IDs
+        try {
             const following = await prisma.follow.findMany({
                 where: { followerId: userId },
                 select: { followingId: true }
-            }) 
+            });
 
-            //Build author list (self + following)
-            const authorIds = [
-                userId,
-                ...following.map(f => f.followingId)
-            ];
+            const authorIds = [userId, ...following.map(f => f.followingId)];
 
-            //Get posts
+            // Fetch one extra to detect whether another page exists
             const posts = await prisma.post.findMany({
-                where: {authorId: {in: authorIds}}, 
-                orderBy: {createdAt: "desc"},
-                 include: {
+                where: { authorId: { in: authorIds } },
+                orderBy: { createdAt: "desc" },
+                skip,
+                take: limit + 1,
+                include: {
                     author: {
                         select: {
                             id: true,
@@ -136,20 +133,23 @@ function getPosts(prisma) {
                     },
                     _count: {
                         select: {
-                        likes: true,
-                        comments: true
+                            likes: true,
+                            comments: true
                         }
-                    }                    
+                    }
                 }
-            })
+            });
 
-            res.json(posts);
+            const hasMore = posts.length > limit;
+            const paginatedPosts = hasMore ? posts.slice(0, limit) : posts;
 
-        } catch(err){
+            res.json({ posts: paginatedPosts, hasMore });
+
+        } catch (err) {
             console.log(err);
-            res.status(400).json({err: "Failed to fetch posts"})
+            res.status(400).json({ err: "Failed to fetch posts" });
         }
-    }
+    };
 }
 
 
