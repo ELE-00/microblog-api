@@ -2,6 +2,8 @@
 
 REST API for Whispr — a microblogging social platform. Built with Node.js, Express, Prisma, and PostgreSQL.
 
+> **Frontend repo:** [https://github.com/ELE-00/microblog-app](https://github.com/ELE-00/microblog-app)
+
 ## Features
 
 - JWT authentication (signup, login)
@@ -29,6 +31,8 @@ REST API for Whispr — a microblogging social platform. Built with Node.js, Exp
 | Image uploads | Multer + Cloudinary |
 | Real-time | Socket.IO |
 | Testing | Jest + Supertest |
+
+
 
 ## Getting Started
 
