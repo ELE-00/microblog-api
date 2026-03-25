@@ -110,11 +110,15 @@ function getPosts(prisma) {
                 select: { followingId: true }
             });
 
-            const authorIds = [userId, ...following.map(f => f.followingId)];
+            // No followings → show all posts (discovery mode)
+            // Has followings → show only own posts + followed users
+            const whereClause = following.length === 0
+                ? {}
+                : { authorId: { in: [userId, ...following.map(f => f.followingId)] } };
 
             // Fetch one extra to detect whether another page exists
             const posts = await prisma.post.findMany({
-                where: { authorId: { in: authorIds } },
+                where: whereClause,
                 orderBy: { createdAt: "desc" },
                 skip,
                 take: limit + 1,
