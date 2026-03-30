@@ -1,6 +1,6 @@
 # microblog-api
 
-REST API for Whispr — a microblogging social platform. Built with Node.js, Express, Prisma, and PostgreSQL.
+REST API for Pulse — a microblogging social platform. Built with Node.js, Express, Prisma, and PostgreSQL.
 
 > **Frontend repo:** [https://github.com/ELE-00/microblog-app](https://github.com/ELE-00/microblog-app)
 
